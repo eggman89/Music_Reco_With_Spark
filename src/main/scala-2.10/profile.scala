@@ -17,4 +17,10 @@ object profile {
     sqlContext.sql(sqlQuery)
   }
 
+  def get_existing_with_attributes(sqlContext:SQLContext, profile_id:String): DataFrame={
+    var profile_ext = profile.get_existing(sqlContext,profile_id).select("track_id","play_count").registerTempTable("attr")
+    var sqlQuery = "SELECT * FROM attributes JOIN attr ON attributes.track_id = attr.track_id ORDER BY attr.play_count DESC"
+    sqlContext.sql(sqlQuery)
+  }
+
 }

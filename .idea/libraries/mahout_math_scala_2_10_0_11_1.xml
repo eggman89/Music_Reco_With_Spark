@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="mahout-math-scala_2.10-0.11.1">
+    <CLASSES>
+      <root url="jar://D:/Project/Mahout/apache-mahout-distribution-0.11.1/mahout-math-scala_2.10-0.11.1.jar!/" />
+      <root url="jar://D:/Project/Mahout/apache-mahout-distribution-0.11.1/mahout-spark_2.10-0.11.1.jar!/" />
+      <root url="jar://D:/Project/Mahout/apache-mahout-distribution-0.11.1/mahout-h2o_2.10-0.11.1-dependency-reduced.jar!/" />
+      <root url="jar://D:/Project/Mahout/apache-mahout-distribution-0.11.1/mahout-hdfs-0.11.1.jar!/" />
+      <root url="jar://D:/Project/Mahout/apache-mahout-distribution-0.11.1/mahout-spark-shell_2.10-0.11.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://D:/Project/Mahout/apache-mahout-distribution-0.11.1/mahout-h2o_2.10-0.11.1-dependency-reduced.jar!/" />
+    </SOURCES>
+  </library>
+</component>

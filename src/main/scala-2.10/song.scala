@@ -2,9 +2,14 @@ import org.apache.spark.sql.{DataFrame, SQLContext, Row}
 import org.apache.spark.SparkContext
 import scala.collection.immutable.ListMap
 import org.apache.spark.sql.types.{StructType,StructField,StringType}
+import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types.NumericType
+import org.apache.spark.sql.types.FloatType
 
 
 object song {
+
+
   def get_similar(sqlContext: SQLContext, user_history: Map[String, Int]): Map[String, Float] = {
 
     var index = 0;    // to track the index in loop
@@ -86,16 +91,44 @@ object song {
   {
     var sqlQuery = ""
     val schemaString = "track_id reco_conf"
-    val schema = StructType(schemaString.split(" ").map(fieldName => StructField(fieldName, StringType, true)))
-    val rowRDD = sc.parallelize(user_history.toSeq).map(_.toString().drop(1).dropRight(1).split(",")).map(x => Row(x(0), x(1)))
+    //val schema = StructType(schemaString.split(" ").map(fieldName => StructField(fieldName, StringType, true)))
+    val schema = StructType(
+                  schemaString.split(" ").map(fieldName =>
+                  if(fieldName == "track_id" ) StructField(fieldName, StringType, true)
+                  else StructField(fieldName, FloatType, true))
+    )
+    val rowRDD = sc.parallelize(user_history.toSeq).map(_.toString().drop(1).dropRight(1).split(",")).map(x => Row(x(0), x(1).toFloat))
 
     val likeDataFrame = sqlContext.createDataFrame(rowRDD, schema)
-
-    //case class Like(track_id: String, reco_conf: Float)
+     //case class Like(track_id: String, reco_conf: Float)
     //val people = sc.parallelize(user_history.toSeq).map(_.toString().drop(1).dropRight(1).split(",")).map(x => Like(x(0), x(1).toFloat)).toDF()
 
     likeDataFrame.registerTempTable("like_table")
     sqlQuery = "SELECT * FROM meta_table JOIN like_table ON like_table.track_id = meta_table.track_id ORDER BY like_table.reco_conf DESC "
     sqlContext.sql(sqlQuery)
   }
+
+  def getAttributes(sqlContext: SQLContext, id:Iterator[String]) :DataFrame=
+  {
+    var tid=""
+    var tidlist=""
+    var tidinorder=""
+    var index=0
+
+    for (tid<-id)
+    {
+      // if(index < 20){
+      tidlist = tidlist + "'" + tid + "', "
+      tidinorder = tidinorder + " WHEN '" + tid+ "' THEN " + (index + 1)
+
+      // }
+      index = index + 1
+
+    }
+    tidlist = tidlist.dropRight(2)
+    var sqlQuery = ""
+    sqlQuery = "SELECT * FROM attributes WHERE track_id IN (" + tidlist + ") ORDER BY CASE track_id" + tidinorder + " END"
+    sqlContext.sql(sqlQuery)
+  }
+
 }
