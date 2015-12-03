@@ -27,5 +27,12 @@
     <orderEntry type="library" name="spark-csv_2.10-1.2.0" level="project" />
     <orderEntry type="library" name="mahout-math-scala_2.10-0.11.1" level="project" />
     <orderEntry type="library" name="mahout-mr-0.11.1" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fommil.netlib:netlib-native_ref-win-x86_64:1.1:natives:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fommil.netlib:netlib-native_system-win-x86_64:1.1:natives:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fommil.netlib:native_ref-java:1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fommil.netlib:native_system-java:1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: net.sourceforge.f2j:arpack_combined_all:0.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fommil.netlib:core:1.1.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fommil:jniloader:1.1:jar" level="project" />
   </component>
 </module>
