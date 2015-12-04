@@ -1,3 +1,4 @@
+import breeze.numerics.abs
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.classification.NaiveBayes
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -9,7 +10,9 @@ import org.apache.spark.sql.types.{IntegerType, StructType, StructField, StringT
 import org.apache.spark.sql.Row
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.rdd.RDD
-
+import org.apache.spark.mllib.regression.LinearRegressionModel
+import org.apache.spark.mllib.regression.LinearRegressionWithSGD
+import org.apache.spark.mllib.classification.{LogisticRegressionWithLBFGS, LogisticRegressionModel}
 object engine {
   def main(args: Array[String]) {
     //remove logging from console
@@ -30,7 +33,7 @@ object engine {
 
     //df_userdata > dataframe for user data
     //val text_train_triplets = sc.textFile("hdfs://localhost:19000/train_triplets_small.txt")
-    val text_train_triplets = sc.textFile("D:/Project/Dataset/train_triplets_small2.txt")
+    val text_train_triplets = sc.textFile("D:/Project/FinalDataset/train_triplets_small2.txt")
     val schema_string = "user song_id play_count"
 
     val schema = StructType(schema_string.split(" ").map(fieldName =>
@@ -46,12 +49,19 @@ object engine {
     df_attributes > dataframe for song attributes
     loading the dataframe from HDFS ; currently local node*/
 
-    val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "hdfs://localhost:19000/track_metadata_without_dup.csv", "header" -> "true"))
-    val df_similar = sqlContext.load("com.databricks.spark.csv", Map("path" -> "hdfs://localhost:19000/lastfm_similar_dest.csv", "header" -> "true"))
-    val df_attributes = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/Dataset/song_attribute.csv", "header" -> "true"))
-    val df_new_songs = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/Dataset/new_songs.csv", "header" -> "true"))
+    val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/track_metadata_without_dup.csv", "header" -> "true"))
+    val df_similar = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/lastfm_similar_dest.csv", "header" -> "true"))
+    val df_attributes = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/song_attributes.csv", "header" -> "true"))
+    val df_old_songs = df_metadata.where("year < 2009")
+    val df_new_songs = df_metadata.where("year >= 2009")
+    val df_new_keys = df_new_songs.select("track_id").toDF("tid")
+    val df_new_attributes = df_attributes.join(df_new_keys, df_new_keys("tid") === df_attributes("track_id"))select("track_id",	"danceability",	"energy",	"key"	,"loudness",	"tempo",	"time_signature")
+    //val df_old_attributes = df_attributes.join(df_old_songs, df_old_songs("track_id") === df_attributes("track_id"))
+    //df_attributes.printSchema()
+
 
     df_metadata.registerTempTable("meta_table")
+    df_old_songs.registerTempTable("old_meta_table")
     df_similar.registerTempTable("similar_table")
     df_attributes.registerTempTable("attributes")
     df_train_triplets.registerTempTable("triplets_table")
@@ -72,7 +82,6 @@ object engine {
       list_of_songs += (row(0).drop(1).toString -> row(1).dropRight(1).toInt)
 
     }
-
     val similar_songs = song.get_similar(sqlContext, list_of_songs) //Map for similar songs
     val similar_songs_RDD: RDD[(String, Float)] = sc.parallelize(similar_songs.toSeq) //Map to RDD
     val similar_songs_DF = similar_songs_RDD.toDF() //RDD to DF
@@ -90,30 +99,34 @@ object engine {
     top_score = top_score / 10.00
 
     //convert SimilarResult DF to Similar Result RDD
-    var SimilarResultRDD:RDD[(String, Int,String)] = SimilarResult.map(r=>(r(0).toString,math.round(r(1).toString.toDouble/top_score).toInt,"Not"))
+    var SimilarResultRDD:RDD[(String, Int,String)] = SimilarResult.map(r=>(r(0).toString,math.round(r(1).toString.toDouble/top_score).toInt," "))
     var SimilarResultRDD2:RDD[(String, Int)] = SimilarResult.map(r=>(r(0).toString,math.round(r(1).toString.toDouble/top_score).toInt))
 
  //convert similar_song_Attr DF to similar_song RDD Label Point
- val similar_songs_RDD_LP: RDD[LabeledPoint] = similar_songs_attr.map(l => LabeledPoint
+ val similar_songs_RDD_LP: RDD[LabeledPoint] = similar_songs_attr.map(l =>
+   if (l(0).toString.isEmpty == false & l(1).toString.isEmpty == false & l(2).toString.isEmpty == false & l(3).toString.isEmpty == false)
+     (LabeledPoint
  (math.round(l(0).toString.toDouble / top_score),
   Vectors.dense(math.round(l(1).toString.toDouble*10),
     math.round(l(2).toString.toDouble*10),
-    math.round((30 + l(3).toString.toDouble)/3),
+    math.round(abs( l(3).toString.toDouble)/3),
     math.round(l(4).toString.toDouble))))
+       else
+     (LabeledPoint(0 , Vectors.dense(0,0,0,0))))
 
  //train bayes with existing data
- println("Start: Training Bayes Naive")
+ println("Start: Training Bayes top")
  val model = NaiveBayes.train(similar_songs_RDD_LP, lambda = 1.0, modelType = "multinomial")
  println("End: Training Bayes Naive")
  // test the set of new songs
 
  //transform and show final set of songs
- val new_song_RDD:RDD[(String, Int, String)] = df_new_songs.map(v =>
+ val new_song_RDD:RDD[(String, Int, String)] = df_new_attributes.map(v =>
    if (v(1).toString.isEmpty == false & v(2).toString.isEmpty == false & v(4).toString.isEmpty == false & v(5).toString.isEmpty == false)
      (v(0).toString,
        model.predict(Vectors.dense(math.round((v(1).toString.toDouble)*10),
          math.round((v(2).toString.toDouble)*10),
-         math.round((30.0 + v(4).toString.toDouble)/3),
+         math.round(abs(v(4).toString.toDouble)/3),
          math.round(v(5).toString.toDouble))).toInt,"Hot")
    else (v(0).toString, 0,"Hot"))
 
@@ -122,7 +135,7 @@ object engine {
  val Top200TrackIdMap: Map[String,Int] =  Top200TrackId.collect().toMap
 
  val final_songs = song.getDetails(sqlContext,Top200TrackIdMap.keysIterator)
- final_songs.join(Top200TrackIdDF,Top200TrackIdDF("_1")===final_songs("track_id") ).select("track_id","title","release","artist_name","duration","year","_2","_3").toDF("track_id","title","release","artist_name","duration","year","Confidence","HotOrNot").sort($"_2".desc).show(100)
+ final_songs.join(Top200TrackIdDF,Top200TrackIdDF("_1")===final_songs("track_id") ).select("track_id","title","release","artist_name","duration","year","_2","_3").toDF("track_id","title","release","artist_name","duration","year","Confidence","Hot?").sort($"_2".desc).show(100)
 
  sc.stop()
  println("Spark Context stopped")
