@@ -111,6 +111,8 @@ object hitSongPredictor {
     println("output")
     curtis_RDD.foreach(println)
     grad_RDD.foreach(println)
+
+
   }
 
 

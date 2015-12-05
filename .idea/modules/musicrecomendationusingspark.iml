@@ -34,5 +34,6 @@
     <orderEntry type="library" name="SBT: net.sourceforge.f2j:arpack_combined_all:0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: com.github.fommil.netlib:core:1.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: com.github.fommil:jniloader:1.1:jar" level="project" />
+    <orderEntry type="library" name="joda-time-2.4" level="project" />
   </component>
 </module>

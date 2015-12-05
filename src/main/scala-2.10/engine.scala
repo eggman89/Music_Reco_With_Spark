@@ -109,7 +109,7 @@ object engine {
  (math.round(l(0).toString.toDouble / top_score),
   Vectors.dense(math.round(l(1).toString.toDouble*10),
     math.round(l(2).toString.toDouble*10),
-    math.round(abs( l(3).toString.toDouble)/3),
+  //  math.round(abs( l(3).toString.toDouble)/3),
     math.round(l(4).toString.toDouble))))
        else
      (LabeledPoint(0 , Vectors.dense(0,0,0,0))))
@@ -126,7 +126,7 @@ object engine {
      (v(0).toString,
        model.predict(Vectors.dense(math.round((v(1).toString.toDouble)*10),
          math.round((v(2).toString.toDouble)*10),
-         math.round(abs(v(4).toString.toDouble)/3),
+      //   math.round(abs(v(4).toString.toDouble)/3),
          math.round(v(5).toString.toDouble))).toInt,"Hot")
    else (v(0).toString, 0,"Hot"))
 
