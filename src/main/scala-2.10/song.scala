@@ -104,7 +104,7 @@ object song {
     //val people = sc.parallelize(user_history.toSeq).map(_.toString().drop(1).dropRight(1).split(",")).map(x => Like(x(0), x(1).toFloat)).toDF()
 
     likeDataFrame.registerTempTable("like_table")
-    sqlQuery = "SELECT old_meta_table.track_id, title,artist_name,release,duration,year,reco_conf FROM old_meta_table JOIN like_table ON like_table.track_id = old_meta_table.track_id ORDER BY like_table.reco_conf DESC "
+    sqlQuery = "SELECT meta_table.track_id, title,artist_name,release,duration,year,reco_conf FROM meta_table JOIN like_table ON like_table.track_id = meta_table.track_id ORDER BY like_table.reco_conf DESC "
     sqlContext.sql(sqlQuery)
   }
 

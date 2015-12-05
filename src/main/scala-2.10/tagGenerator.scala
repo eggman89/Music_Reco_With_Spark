@@ -40,7 +40,7 @@ object tagGenerator {
 
 
     println("Select a Method to classify songs")
-    println("1: Random Forest; 2:Logistic Regression With LBFGS; 3:Decision Trees;  4:Naive Bayes")
+    println("1: Random Forest; 2:Logistic Regression With LBFGS; 3:Decision Trees;  4:Naive Bayes 5:Linear Regression")
     val method = readInt()
     //load tags and tag ids and attributes
 
@@ -49,7 +49,7 @@ object tagGenerator {
     val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/track_metadata_without_dup.csv", "header" -> "true"))
     val df_attributes =  sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/song_attributes.csv", "header" -> "true"))
     val df_tid_tag_id = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/tag_tid_tag_id.csv", "header" -> "true"))
-    val df_tid_tag_id_top10 =  df_tid_tag_id.where("tag_id = '95' or tag_id = '5' or tag_id = '96' or tag_id = '38' or tag_id = '70' or tag_id = '98' or tag_id = '238' or tag_id = '86' or tag_id = '322'").limit(20000)
+    val df_tid_tag_id_top10 =  df_tid_tag_id.where("tag_id = '95' or tag_id = '5' or tag_id = '96' or tag_id = '38' or tag_id = '70' or tag_id = '98' or tag_id = '238' or tag_id = '86' or tag_id = '322'").limit(30)
 
     val arr = new Array[String](1)
     arr(0) = "tid"
@@ -67,7 +67,7 @@ object tagGenerator {
 
 
     val RDD_LP_tid_attributes_tag_id: RDD[LabeledPoint] = df_train_tid_attributes_tag_id.map(l =>
-  if (l(1).toString.isEmpty == false & l(2).toString.isEmpty == false & l(3).toString.isEmpty == false & l(4).toString.isEmpty == false)
+    if (l(1).toString.isEmpty == false & l(2).toString.isEmpty == false & l(3).toString.isEmpty == false & l(4).toString.isEmpty == false)
     (LabeledPoint
     (idtotagid(l(6).toString.toInt) ,
       Vectors.dense(math.round((l(1).toString.toDouble)*10),
@@ -100,6 +100,12 @@ object tagGenerator {
     {
       predicted_res_RDD = doNaiveBayes.test(doNaiveBayes.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
     }
+
+    if(method == 5)
+      {
+        predicted_res_RDD = doLinearSVM.test(doLinearSVM.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
+
+      }
 
    //calculate accuracy
    // predicted_res_RDD.foreach(println)

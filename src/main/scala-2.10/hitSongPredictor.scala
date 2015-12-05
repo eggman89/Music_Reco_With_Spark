@@ -98,7 +98,7 @@ object hitSongPredictor {
             math.round(v(8).toString.toDouble))).toInt)
       else (v(0).toString, 0))
 
-    //test with curtis
+    //test with grad
     val grad_RDD:RDD[(String, Int)] = df_graduation.map(v =>
       if (v(5).toString.isEmpty == false & v(6).toString.isEmpty == false & v(7).toString.isEmpty == false & v(8).toString.isEmpty == false)
         (v(0).toString,
