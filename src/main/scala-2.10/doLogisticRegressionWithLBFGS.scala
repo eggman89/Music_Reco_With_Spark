@@ -12,8 +12,8 @@ import org.joda.time.base.AbstractInterval
  */
 object doLogisticRegressionWithLBFGS {
 
-  val tagidtoid : Map[Int, Int] =  Map(1->95,2->5,3->96,4->38,5->70,6->98,7->238,8->86,9->322)
-  val idtotagid : Map[Int, Int] =  Map(95->1,5->2,96->3,38->4,70->5,98->6,238->7,86->8,322->9)
+  val tagidtoid : Map[Int, Int] =  Map(0->0,1->95,2->5,3->96,4->38,5->70,6->98,7->238,8->86,9->322)
+  val idtotagid : Map[Int, Int] =  Map(0->0,95->1,5->2,96->3,38->4,70->5,98->6,238->7,86->8,322->9)
 
   def train(df_train_tid_attributes_tag_id: DataFrame,RDD_LP_tid_attributes_tag_id : RDD[LabeledPoint] ): LogisticRegressionModel=
   {

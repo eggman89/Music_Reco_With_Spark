@@ -49,7 +49,7 @@ object tagGenerator {
     val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/track_metadata_without_dup.csv", "header" -> "true"))
     val df_attributes =  sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/song_attributes.csv", "header" -> "true"))
     val df_tid_tag_id = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/tag_tid_tag_id.csv", "header" -> "true"))
-    val df_tid_tag_id_top10 =  df_tid_tag_id.where("tag_id = '95' or tag_id = '5' or tag_id = '96' or tag_id = '38' or tag_id = '70' or tag_id = '98' or tag_id = '238' or tag_id = '86' or tag_id = '322'").limit(100)
+    val df_tid_tag_id_top10 =  df_tid_tag_id.where("tag_id = '95' or tag_id = '5' or tag_id = '96' or tag_id = '38' or tag_id = '70' or tag_id = '98' or tag_id = '238' or tag_id = '86' or tag_id = '322'").limit(20000)
 
     val arr = new Array[String](1)
     arr(0) = "tid"
@@ -79,30 +79,30 @@ object tagGenerator {
 
 
     //train and test
-    val predicted_res_RDD: RDD[(String, Int, String)] = sc.emptyRDD
+    var predicted_res_RDD: RDD[(String, Int, String)] = sc.emptyRDD
 
     if (method == 1)
       {
-        val predicted_res_RDD = doRandomForest.test(doRandomForest.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
+        predicted_res_RDD = doRandomForest.test(doRandomForest.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
       }
 
     if(method ==2)
       {
-        val predicted_res_RDD = doLogisticRegressionWithLBFGS.test(doLogisticRegressionWithLBFGS.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
+        predicted_res_RDD = doLogisticRegressionWithLBFGS.test(doLogisticRegressionWithLBFGS.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
       }
 
     if(method ==3)
     {
-      val predicted_res_RDD = doDecisionTrees.test(doDecisionTrees.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
+      predicted_res_RDD = doDecisionTrees.test(doDecisionTrees.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
     }
 
     if(method ==4)
     {
-      val predicted_res_RDD = doNaiveBayes.test(doNaiveBayes.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
+      predicted_res_RDD = doNaiveBayes.test(doNaiveBayes.train(df_train_tid_attributes_tag_id,RDD_LP_tid_attributes_tag_id),df_test_tid_attributes_tag_id)
     }
 
    //calculate accuracy
-
+   // predicted_res_RDD.foreach(println)
     val predictionAndLabels : RDD[(Double,Double)] = predicted_res_RDD.toDF().map(l => (l(1).toString.toDouble,l(2).toString.toDouble))
     val metrics = new MulticlassMetrics(predictionAndLabels)
     val precision = metrics.precision
