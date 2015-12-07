@@ -6,7 +6,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.joda.time
 import org.joda.time.{Interval, DateTime}
-import org.joda.time.base.AbstractInterval
+
 
 /**
  * Created by sneha on 12/5/2015.
@@ -44,8 +44,7 @@ object doRandomForest {
           (model.predict(Vectors.dense(math.round((l(1).toString.toDouble) * 10),
             math.round(l(2).toString.toDouble * 10),
             l(3).toString.toDouble,
-            math.round(l(4).toString.toDouble),
-
+            math.round(l(4).toString.toInt.toDouble),
             math.round(l(5).toString.toDouble))).toInt), l(7).toString))
       else (l(0).toString, 0, (l(7).toString.toInt).toString))
     val endTime = new DateTime()

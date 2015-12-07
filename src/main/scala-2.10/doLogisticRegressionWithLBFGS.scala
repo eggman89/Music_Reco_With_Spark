@@ -5,7 +5,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.joda.time
 import org.joda.time.{Interval, DateTime}
-import org.joda.time.base.AbstractInterval
 
 /**
  * Created by sneha on 12/5/2015.
@@ -33,26 +32,15 @@ object doLogisticRegressionWithLBFGS {
     val startTime =  new DateTime()
     println("Start: Prediction of", df_test_tid_attributes_tag_id.count(), "with LogisticRegressionWithLBFGS ")
     val predicted_res_RDD:RDD[(String, Int, String)] = df_test_tid_attributes_tag_id.map(l =>
-      ( (l(0).toString,
-        (model.predict(Vectors.dense(
-          math.round((1).toString.toFloat),
-          math.round(l(2).toString.toFloat * 100),
-          math.round(l(3).toString.toFloat * 1000),
-          math.round(l(4).toString.toFloat),
-          math.round(l(5).toString.toFloat * 1000),
-          math.round(l(6).toString.toFloat * 10),
-          math.round(l(7).toString.toFloat * 10),
-          math.round(l(8).toString.toFloat),
-          math.round(l(9).toString.toFloat),
-          math.round(l(10).toString.toFloat * 100),
-          math.round(l(11).toString.toFloat * 1000),
-          math.round(l(11).toString.toFloat ),
-          math.round(l(13).toString.toFloat * 1000),
-          math.round(l(14).toString.toFloat * 10),
-          math.round(l(15).toString.toFloat * 10),
-          math.round(l(16).toString.toFloat )
-        )).toInt),l(18).toString))
-    )
+      if (l(1).toString.isEmpty == false & l(2).toString.isEmpty == false & l(3).toString.isEmpty == false & l(4).toString.isEmpty == false)
+        ((l(0).toString,
+          (model.predict(Vectors.dense(math.round((l(1).toString.toDouble) * 10),
+            math.round(l(2).toString.toDouble * 10),
+            l(3).toString.toDouble,
+            math.round(l(4).toString.toInt.toDouble),
+
+            math.round(l(5).toString.toDouble))).toInt), l(7).toString))
+      else (l(0).toString, 0, (l(7).toString.toInt).toString))
 
 
     val endTime = new DateTime()

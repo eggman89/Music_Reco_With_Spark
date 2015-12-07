@@ -10,14 +10,14 @@ import org.apache.spark.sql.types.FloatType
 object song {
 
 
-  def get_similar(sqlContext: SQLContext, user_history: Map[String, Int]): Map[String, Float] = {
+  def get_similar(sqlContext: SQLContext, user_history: Map[String, Int]): Map[String, Int] = {
 
     var index = 0;    // to track the index in loop
     var i = 0;
     var song_tmp = ""
     var sim_songs = ""
     var parent_key = ""
-    var map_sim_songs = Map[String, Float]() //Map to keep track of similar songs with priority
+    var map_sim_songs = Map[String, Int]() //Map to keep track of similar songs with priority
 
 
     var tid = ""
@@ -52,11 +52,13 @@ object song {
 
         if (index % 2 == 0) // store the tid & frequency {
         {
-          map_sim_songs += (ar_similar_songs(index).toString() -> (user_history(parent_key) * ar_similar_songs(index + 1).toFloat))
+
+          map_sim_songs += (ar_similar_songs(index).toString() -> (user_history(parent_key) * ar_similar_songs(index + 1).toString.toFloat.toInt))
         }
         index = index + 1
       }
     }
+
     new ListMap() ++ map_sim_songs.toSeq.sortWith (_._2 > _._2)
   }
 
@@ -87,7 +89,7 @@ object song {
     sqlContext.sql(sqlQuery)
   }
 
-  def FinalResult(sc: SparkContext, sqlContext: SQLContext, user_history:Map[String, Float]) :DataFrame=
+  def FinalResult(sc: SparkContext, sqlContext: SQLContext, user_history:Map[String, Int]) :DataFrame=
   {
     var sqlQuery = ""
     val schemaString = "track_id reco_conf"

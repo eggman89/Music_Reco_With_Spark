@@ -73,7 +73,7 @@ object tagGenerator {
             l(5).toString.toDouble
           )))
       else
-        (LabeledPoint(0 , Vectors.dense(0.0,0.0,0.0,0,0))))
+        LabeledPoint(0 , Vectors.dense(0.0,0.0,0.0,0,0)))
 
 
     //train and test

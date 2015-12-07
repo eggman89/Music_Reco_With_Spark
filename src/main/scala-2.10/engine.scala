@@ -11,30 +11,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.recommendation.{ALS, Rating, MatrixFactorizationModel}
 
 
-class hashmap  extends java.io.Serializable
-{
-  var obj:Map[String,Int] = Map()
-  var id = 0
-  def add(value:String): Int ={
-
-    if (obj.contains(value) == true)
-    {
-      obj(value)
-    }
-
-    else
-    {
-      id = id + 1
-      obj = obj +(value->id)
-      id
-    }
-  }
-
-  def findval(value : Int) : String = {
-    val default = ("-1",0)
-    obj.find(_._2==value).getOrElse(default)._1
-  }
-}
 
 object engine {
   def main(args: Array[String]) {
@@ -108,7 +84,7 @@ object engine {
       list_of_songs += (row(0).drop(1).toString -> row(1).dropRight(1).toInt)
 
     }
-    val similar_songs = song.get_similar(sqlContext, list_of_songs) //Map for similar songs
+    /*val similar_songs = song.get_similar(sqlContext, list_of_songs) //Map for similar songs
     val similar_songs_RDD: RDD[(String, Float)] = sc.parallelize(similar_songs.toSeq) //Map to RDD
     val similar_songs_DF = similar_songs_RDD.toDF() //RDD to DF
     // DF song attributes for similar Songs
@@ -132,7 +108,6 @@ object engine {
 
 
     var top_score = SimilarResult.select("reco_conf").first().toString().dropRight(1).drop(1).toDouble
-    //println("here6")
     top_score = top_score / 100.00
 
     //convert SimilarResult DF to Similar Result RDD
@@ -166,7 +141,7 @@ object engine {
  final_songs.join(Top200TrackIdDF,Top200TrackIdDF("_1")===final_songs("track_id") ).select("track_id","title","release","artist_name","duration","year","_2","_3").toDF("track_id","title","release","artist_name","duration","year","Confidence","Hot?").sort($"_2".desc).show(100)
 
  sc.stop()
- println("Spark Context stopped")
+ println("Spark Context stopped")*/
 }
 
 }

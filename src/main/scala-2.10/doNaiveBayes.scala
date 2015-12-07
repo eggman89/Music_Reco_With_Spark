@@ -5,7 +5,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.joda.time
 import org.joda.time.{Interval, DateTime}
-import org.joda.time.base.AbstractInterval
 
 /**
  * Created by sneha on 12/5/2015.
@@ -39,7 +38,7 @@ object doNaiveBayes {
             l(3).toString.toDouble,
             math.round(l(4).toString.toDouble),
 
-            math.round(l(5).toString.toDouble))).toInt), l(7).toString))
+            math.round(l(5).toString.toInt.toDouble))).toInt), l(7).toString))
       else (l(0).toString, 0, (l(7).toString.toInt).toString))
     val endTime = new DateTime()
     val totalTime = new time.Interval(startTime,endTime)
