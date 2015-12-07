@@ -1,18 +1,41 @@
-import breeze.numerics.abs
 import org.apache.spark.SparkConf
-import org.apache.spark.mllib.classification.NaiveBayes
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.SparkContext
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import org.apache.spark.sql.types.{IntegerType, StructType, StructField, StringType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.Row
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.regression.LinearRegressionModel
-import org.apache.spark.mllib.regression.LinearRegressionWithSGD
-import org.apache.spark.mllib.classification.{LogisticRegressionWithLBFGS, LogisticRegressionModel}
+import org.apache.spark.mllib.recommendation.{ALS, Rating, MatrixFactorizationModel}
+
+
+class hashmap  extends java.io.Serializable
+{
+  var obj:Map[String,Int] = Map()
+  var id = 0
+  def add(value:String): Int ={
+
+    if (obj.contains(value) == true)
+    {
+      obj(value)
+    }
+
+    else
+    {
+      id = id + 1
+      obj = obj +(value->id)
+      id
+    }
+  }
+
+  def findval(value : Int) : String = {
+    val default = ("-1",0)
+    obj.find(_._2==value).getOrElse(default)._1
+  }
+}
+
 object engine {
   def main(args: Array[String]) {
     //remove logging from console
@@ -30,9 +53,6 @@ object engine {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
     Logger.getLogger("INFO").setLevel(Level.OFF)
-    println("Select a Method to Predict the songs values")
-    println("1: LinearRegressionWithSGD; 2:RidgeRegressionWithSGD; 3:LassoWithSGD ")
-    val method = readInt()
 
     //df_userdata > dataframe for user data
     //val text_train_triplets = sc.textFile("hdfs://localhost:19000/train_triplets_small.txt")
@@ -46,6 +66,11 @@ object engine {
 
     val rowRDD = text_train_triplets.map(_.split("\t")).map(p => Row(p(0), p(1), p(2).toInt))
     val df_train_triplets = sqlContext.createDataFrame(rowRDD, schema)
+
+    val text_train_triplets_all = sc.textFile("D:/Project/FinalDataset/train_triplets.txt")
+
+    val rowRDD1 = text_train_triplets.map(_.split("\t")).map(p => Row(p(0), p(1), p(2).toInt))
+    val df_train_triplets_all = sqlContext.createDataFrame(rowRDD1, schema)
 
     /*df_metadata > dataframe for songs metadata
     df_similar >  dataframe for similar songs
@@ -66,8 +91,6 @@ object engine {
     df_similar.registerTempTable("similar_table")
     df_attributes.registerTempTable("attributes")
     df_train_triplets.registerTempTable("triplets_table")
-    //df_old_attributes.show(10)
-
 
     println("User Profile Loaded")
     var user_history_df = profile.get_existing(sqlContext, "b80344d063b5ccb3212f76538f3d9e43d87dca9e").where("year < 2009") //get user history
@@ -75,6 +98,7 @@ object engine {
     println("Top 10 songs listened by the user")
     user_history_df.select("title", "artist_name", "release", "duration", "year", "play_count").show(20)
 
+    println("Finding User reccomended songs")
     var user_history_list = user_history_df.select("track_id", "play_count").limit(10).map(r => Row(r(0), r(1)))
 
     //converting RDD to List
@@ -92,11 +116,20 @@ object engine {
     var similar_songs_attr = songs_attr.join(similar_songs_DF, songs_attr("track_id") === similar_songs_DF("_1")).select("_2", "danceability", "energy", "loudness", "tempo")
     var sim_song_keys = song.get_similar(sqlContext, list_of_songs)
 
+    //Similar Result 1  : By the use of user recomendations
     var SimilarResult = song.FinalResult(sc, sqlContext, sim_song_keys).select("track_id","reco_conf") //DO NOT TOUCH
 
-    //get top score and divide by 10
-    //sim_song_keys.foreach(println)
-    //SimilarResult.show(10)
+    //Similar Result 2: By the use of ALS reccomendation
+    println("Evaluating Reccomendation with Collabarative filtering")
+    val user_list = new hashmap()
+    val song_list = new hashmap()
+    val ratingRDD = text_train_triplets.map(_.split("\t")).map(p =>
+      Rating(user_list.add(p(0)), song_list.add(p(1)), p(2).toDouble))
+
+    val ALSmodel = ALS.trainImplicit(ratingRDD,10,10)
+    ALSmodel.recommendProductsForUsers(user_list.add("b80344d063b5ccb3212f76538f3d9e43d87dca9e")).foreach(println)
+    val SimilarResult2 = ""
+
 
     var top_score = SimilarResult.select("reco_conf").first().toString().dropRight(1).drop(1).toDouble
     //println("here6")
@@ -119,22 +152,9 @@ object engine {
           math.round(l(4).toString.toDouble)))
     else LabeledPoint(0,Vectors.dense(0,0,0)))
 
- var new_song_RDD: RDD[(String, Int, String)] = sc.emptyRDD
-
-    if (method ==1)
-    {
-      new_song_RDD = doLinearSVM.test(doLinearSVM.train(df_old_songs,similar_songs_RDD_LP),df_new_attributes)
-    }
-
-    if(method ==2)
-    {
-      new_song_RDD = doRidgeRegressionWithSGD.test(doRidgeRegressionWithSGD.train(df_old_songs,similar_songs_RDD_LP),df_new_attributes)
-    }
-
-    if(method ==3)
-    {
-      new_song_RDD = doLassoWithSGD.test(doLassoWithSGD.train(df_old_songs,similar_songs_RDD_LP),df_new_attributes)
-    }
+    println("sim",similar_songs_RDD_LP.count)
+     var new_song_RDD: RDD[(String, Int, String)] = sc.emptyRDD
+     new_song_RDD = doNaiveBayes2.test(doNaiveBayes2.train(df_old_songs,similar_songs_RDD_LP),df_new_attributes)
 
  // test the set of new songs
 

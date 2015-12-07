@@ -12,8 +12,6 @@ import org.joda.time.base.AbstractInterval
  */
 object doLogisticRegressionWithLBFGS {
 
-  val tagidtoid : Map[Int, Int] =  Map(0->0,1->95,2->5,3->96,4->38,5->70,6->98,7->238,8->86,9->322)
-  val idtotagid : Map[Int, Int] =  Map(0->0,95->1,5->2,96->3,38->4,70->5,98->6,238->7,86->8,322->9)
 
   def train(df_train_tid_attributes_tag_id: DataFrame,RDD_LP_tid_attributes_tag_id : RDD[LabeledPoint] ): LogisticRegressionModel=
   {
@@ -21,7 +19,7 @@ object doLogisticRegressionWithLBFGS {
     println("Start: Training LogisticRegressionWithLBFGS with ", df_train_tid_attributes_tag_id.count(), " songs")
     val startTime =  new DateTime()
     val model = new LogisticRegressionWithLBFGS()
-      .setNumClasses(10)
+      .setNumClasses(16)
       .run(RDD_LP_tid_attributes_tag_id)
     println("End: LogisticRegressionWithLBFGS Prediction")
     val endTime = new DateTime()
@@ -34,14 +32,27 @@ object doLogisticRegressionWithLBFGS {
   def test(model : LogisticRegressionModel,df_test_tid_attributes_tag_id : DataFrame ): RDD[(String, Int, String)] = {
     val startTime =  new DateTime()
     println("Start: Prediction of", df_test_tid_attributes_tag_id.count(), "with LogisticRegressionWithLBFGS ")
-    val predicted_res_RDD: RDD[(String, Int, String)] = df_test_tid_attributes_tag_id.map(l =>
-      if (l(1).toString.isEmpty == false & l(2).toString.isEmpty == false & l(3).toString.isEmpty == false & l(4).toString.isEmpty == false)
-        ((l(0).toString,
-          tagidtoid(model.predict(Vectors.dense(math.round((l(1).toString.toDouble) * 10),
-            math.round(l(2).toString.toDouble * 10),
-            //  l(4).toString.toDouble,
-            math.round(l(5).toString.toDouble))).toInt), l(6).toString))
-      else (l(0).toString, 0, idtotagid(l(6).toString.toInt).toString))
+    val predicted_res_RDD:RDD[(String, Int, String)] = df_test_tid_attributes_tag_id.map(l =>
+      ( (l(0).toString,
+        (model.predict(Vectors.dense(
+          math.round((1).toString.toFloat),
+          math.round(l(2).toString.toFloat * 100),
+          math.round(l(3).toString.toFloat * 1000),
+          math.round(l(4).toString.toFloat),
+          math.round(l(5).toString.toFloat * 1000),
+          math.round(l(6).toString.toFloat * 10),
+          math.round(l(7).toString.toFloat * 10),
+          math.round(l(8).toString.toFloat),
+          math.round(l(9).toString.toFloat),
+          math.round(l(10).toString.toFloat * 100),
+          math.round(l(11).toString.toFloat * 1000),
+          math.round(l(11).toString.toFloat ),
+          math.round(l(13).toString.toFloat * 1000),
+          math.round(l(14).toString.toFloat * 10),
+          math.round(l(15).toString.toFloat * 10),
+          math.round(l(16).toString.toFloat )
+        )).toInt),l(18).toString))
+    )
 
 
     val endTime = new DateTime()
