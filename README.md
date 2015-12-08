@@ -7,8 +7,10 @@ We use  a hybrid of collabarative filtering and content based filtering to achie
 
 2)Given a set of songs and it's attributes (i.e tempo, energy, dancablity and loudness) , can we predict the tag for new songs(e.g. CLassic Rock, Pop etcc..)?
 
-3) Given the recent listetning habits of a lot of users in recent times (120k users), can we predict if a new song would be hit or not ?
-
 The dataset has beenn aquired from MillionSongDataset, LastFM and echonest APIs.
 
 More details would be added soon.
+
+->Implemented hybrid of Collaborative filtering and Content-based recommendation using Mllib(logistic regression) .
+->Implemented automatic tag generation(using logistic regression, Random Forest, Naive Bayes and Decision tree) for new songs based on historical data 
+->Provides the prediction accuracy and time taken by all the four algorithms.
