@@ -18,8 +18,8 @@ object doDecisionTrees {
     val numClasses = 16
     val categoricalFeaturesInfo = Map[Int, Int]()
     val impurity = "gini"
-    val maxDepth = 10
-    val maxBins = 32
+    val maxDepth = 1000
+    val maxBins = 64
 
     println("Start: Training DecisionTree with ", df_train_tid_attributes_tag_id.count(), " songs")
     val model = DecisionTree.trainClassifier(RDD_LP_tid_attributes_tag_id, numClasses, categoricalFeaturesInfo,
