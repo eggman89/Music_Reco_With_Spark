@@ -5,7 +5,9 @@ This project attempts to answer the following 2 questions :
 1) Given the listetning habit of a user, how can we reccomend him the best songs suiable to his profile?
 We use a hybrid of collabarative filtering, popularity based model and content based filtering to achieve this.
 (RecoEngine.scala)
-2)Given a set of songs and it's attributes (i.e tempo, energy, dancablity and loudness) , can we predict the tag for new songs(e.g. CLassic Rock, Pop etcc..)?
+
+
+2)Given a set of songs and it's attributes (i.e tempo, energy, dancablity, time signature and key ) , can we predict the tag for new songs(e.g. Classic Rock, Pop etc..)?
 (tagGenerator.scala)
 
 The dataset has beenn aquired from MillionSongDataset, LastFM and echonest APIs.
