@@ -2,8 +2,6 @@ import org.apache.spark.sql.{DataFrame, SQLContext, Row}
 import org.apache.spark.SparkContext
 import scala.collection.immutable.ListMap
 import org.apache.spark.sql.types.{StructType,StructField,StringType}
-import org.apache.spark.sql.types.DataType
-import org.apache.spark.sql.types.NumericType
 import org.apache.spark.sql.types.FloatType
 
 
@@ -106,7 +104,7 @@ object song {
     //val people = sc.parallelize(user_history.toSeq).map(_.toString().drop(1).dropRight(1).split(",")).map(x => Like(x(0), x(1).toFloat)).toDF()
 
     likeDataFrame.registerTempTable("like_table")
-    sqlQuery = "SELECT meta_table.track_id, title,artist_name,release,duration,year,reco_conf FROM meta_table JOIN like_table ON like_table.track_id = meta_table.track_id ORDER BY like_table.reco_conf DESC "
+    sqlQuery = "SELECT meta_table.track_id, title,artist_name,release,duration,year,reco_conf FROM meta_table RIGHT OUTER JOIN like_table ON like_table.track_id = meta_table.track_id ORDER BY like_table.reco_conf DESC "
     sqlContext.sql(sqlQuery)
   }
 

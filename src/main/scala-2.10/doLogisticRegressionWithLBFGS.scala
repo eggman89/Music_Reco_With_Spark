@@ -39,7 +39,7 @@ object doLogisticRegressionWithLBFGS {
             l(3).toString.toDouble,
             math.round(l(4).toString.toInt.toDouble),
 
-            math.round(l(5).toString.toDouble))).toInt), l(7).toString))
+            math.round(l(5).toString.toDouble/10))).toInt), l(7).toString))
       else (l(0).toString, 0, (l(7).toString.toInt).toString))
 
 

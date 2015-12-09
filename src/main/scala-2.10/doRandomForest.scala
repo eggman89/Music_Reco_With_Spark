@@ -18,10 +18,10 @@ object doRandomForest {
     println("Start: Training Random Forest with ", df_train_tid_attributes_tag_id.count(), " songs")
     val numClasses = 16
     val categoricalFeaturesInfo = Map[Int, Int]()
-    val numTrees = 10 // Use more in practice.
+    val numTrees = 30 // Use more in practice.
   val featureSubsetStrategy = "auto" // Let the algorithm choose.
   val impurity = "variance"
-    val maxDepth = 4
+    val maxDepth = 16
     val maxBins = 32
 
     val model = RandomForest.trainRegressor(RDD_LP_tid_attributes_tag_id, categoricalFeaturesInfo,
