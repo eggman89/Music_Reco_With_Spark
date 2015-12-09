@@ -66,7 +66,7 @@ object RecoEngine {
 
     print("Top 10 songs listened by the user")
     //t2.show()
-     user_history_df.select("title", "artist_name", "release", "duration", "year", "play_count").show(10)
+     user_history_df.select("title", "artist_name", "release", "duration", "year", "play_count").sort($"play_count".desc).show(100)
 
     // step 1 : Collaborative filtering 1
     val trainData = sc.parallelize(rawUserSongPlaycount)
