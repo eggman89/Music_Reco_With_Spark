@@ -50,14 +50,14 @@ object tagGenerator {
     val tid_trackid = sc.textFile("D:/Project/FinalDataset/track_id_to_tag.txt").map(_.split("\t")).map(p => Row(p(0), map_tagid_tag0.add(p(1))))
     val df_track_id_tag_id = sqlContext.createDataFrame(tid_trackid, schema)
     val temp = sc.textFile("D:/Project/FinalDataset/track_id_to_tag.txt").collect().map(_.split("\t")).map(p => Row(p(0), map_tagid_tag.add(p(1))))
-    //val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/track_metadata_without_dup.csv", "header" -> "true"))
+    val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/track_metadata_without_dup.csv", "header" -> "true"))
     val df_attributes =  sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/song_attributes.csv", "header" -> "true"))
 
-    //merge tid with song_attributed
+     //merge tid with song_attributed
     val df_tid_attributes = df_attributes.join(df_track_id_tag_id, df_track_id_tag_id("track_id1") ===df_attributes("track_id") ).select("track_id", "danceability","energy", "tempo" ,"key","time_signature")
     val df_tid_attributes_tag_id = df_tid_attributes.join(df_track_id_tag_id, df_track_id_tag_id("track_id1") ===df_tid_attributes("track_id"))
 
-    val split = df_tid_attributes_tag_id.randomSplit(Array(0.95, 0.05))
+    val split = df_tid_attributes_tag_id.randomSplit(Array(0.9, 0.1))
     val df_train_tid_attributes_tag_id = split(0)
     val df_test_tid_attributes_tag_id = split(1)
 
@@ -111,8 +111,11 @@ object tagGenerator {
     val predictionAndLabels : RDD[(Double,Double)] = predicted_res_RDD.toDF().map(l => (l(1).toString.toDouble,l(2).toString.toDouble))
     val metrics = new MulticlassMetrics(predictionAndLabels)
     val precision = metrics.precision
+
     println("Precision = " + precision)
     println("End: Prediction")
+
+
   }
 
 }

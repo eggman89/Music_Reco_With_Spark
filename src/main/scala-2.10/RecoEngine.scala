@@ -3,7 +3,7 @@ import org.apache.spark.mllib.classification.{LogisticRegressionWithLBFGS, Naive
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.types.{StringType, IntegerType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.SparkContext
 import org.apache.log4j.Logger
@@ -21,8 +21,10 @@ object RecoEngine {
     Logger.getLogger("akka").setLevel(Level.OFF)
     Logger.getLogger("INFO").setLevel(Level.OFF)
     System.setProperty("hadoop.home.dir", "c:/winutil/")
-
+   // System.setProperty("AWS_ACCESS_KEY_ID ", "AKIAIC5VOLL6W2KED5LQ")
+    //System.setProperty("AWS_SECRET_ACCESS_KEY ","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")
     val conf = new SparkConf().setAppName("MusicReco").set("spark.serializer", "org.apache.spark.serializer.KryoSerializer").set("spark.executor.memory", "6g").setMaster("local[*]")
+    //val conf = new SparkConf().setAppName("MusicReco").set("spark.serializer", "org.apache.spark.serializer.KryoSerializer").setMaster("spark://172.31.9.13:7077")//.setSparkHome("D:/Project/spark")
     val sc = new SparkContext(conf)
     //setting up sql context to query the data later on
     val sqlContext = new SQLContext(sc)
@@ -32,9 +34,14 @@ object RecoEngine {
     Logger.getLogger("akka").setLevel(Level.OFF)
     Logger.getLogger("INFO").setLevel(Level.OFF)
 
+    val hadoopConf=sc.hadoopConfiguration;
+    hadoopConf.set("fs.s3.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
+    hadoopConf.set("fs.s3.awsAccessKeyId","AKIAIC5VOLL6W2KED5LQ")
+    hadoopConf.set("fs.s3.awsSecretAccessKey","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")
+
     val userid_hashmap = new hashmap()
     val songid_hashmap = new hashmap()
-    println("Input a user number (1-1000) ")
+    println("Input a user number (1-120000) ")
     val user = readInt()
     val rawUserSongPlaycount = sc.textFile("D:/Project/FinalDataset/train_triplets1234.txt").map(_.split("\t")).collect().map(p => Rating(userid_hashmap.add(p(0)), songid_hashmap.add(p(1)), p(2).toInt))
     val df_metadata = sqlContext.load("com.databricks.spark.csv", Map("path" -> "D:/Project/FinalDataset/track_metadata_without_dup.csv", "header" -> "true"))
@@ -65,8 +72,7 @@ object RecoEngine {
     //val user_history_df = profile.get_existing(sqlContext, userid_hashmap.findval(user)).where("year < 2009") //get user history
 
     print("Top 10 songs listened by the user")
-    //t2.show()
-     user_history_df.select("title", "artist_name", "release", "duration", "year", "play_count").show(10)
+     user_history_df.select("title", "artist_name", "release", "duration", "year", "play_count").where("year < 2009").sort($"play_count".desc).show(10)
 
     // step 1 : Collaborative filtering 1
     val trainData = sc.parallelize(rawUserSongPlaycount)
@@ -85,6 +91,7 @@ object RecoEngine {
     val song_val_temp = recommendations.flatMap {
       line => Some(songid_hashmap.obj.find(_._2 == line.product), math.round(line.rating / topcolab))
     }
+
 
     val temp_1 = sc.parallelize(song_val_temp)
     for (x <- temp_1.collect()) {
@@ -111,11 +118,16 @@ object RecoEngine {
     }
 
     val user_similar_songs = song.get_similar(sqlContext, list_of_songs) //Map for similar songs
+    df_similar.unpersist()
+    df_train_triplets_all.unpersist()
     val user_similar_songs_RDD: RDD[(String, Int)] = sc.parallelize(user_similar_songs.toSeq) //Map to RDD
     val user_similar_songs_DF = user_similar_songs_RDD.toDF("_1", "_2").where("_2 > 0 ") //RDD to DF
+
+    val final1 = user_similar_songs_DF.toDF("track_id","confidence").map(f=> (f(0).toString,f(1).toString.toInt,"".toString)).toDF("track_id", "confidence","HotorNot?")
+   // final1.printSchema()
     // DF song attributes for similar Songs
     val songs_attr = song.getAttributes(sqlContext, user_similar_songs.keysIterator)
-    var user_SimilarResult = song.FinalResult(sc, sqlContext, user_similar_songs).select("track_id", "reco_conf") //DO NOT TOUCH
+    val user_SimilarResult = song.FinalResult(sc, sqlContext, user_similar_songs).select("track_id", "reco_conf") //DO NOT TOUCH
 
     //step 3 : prepare training set
     var top_score = user_SimilarResult.select("reco_conf").first().toString().dropRight(1).drop(1).toDouble
@@ -140,6 +152,8 @@ object RecoEngine {
     val temp2 = df_reco_old_attributes.toDF("track_id","confidence","track_id2","danceability","energy","key" , "loudness","tempo","time_signature")
       .select("track_id","danceability","energy", "tempo" ,"key","time_signature","confidence").where("confidence > 0")
 
+    val final2 = temp2.select("track_id", "confidence").map(f=> (f(0).toString,f(1).toString.toInt,"".toString)).toDF("track_id", "confidence","HotorNot?")
+ //  final2.printSchema()
     val colab_similar_songs_RDD_LP: RDD[LabeledPoint] = temp2.map(l =>
       if (l(1).toString.isEmpty == false & l(2).toString.isEmpty == false & l(4).toString.isEmpty == false)
 
@@ -153,9 +167,8 @@ object RecoEngine {
       else LabeledPoint(0, Vectors.dense(0, 0, 0, 0, 0)))
 
     //merge colab reccomennded + user reccomended songs
-
     val train_set = colab_similar_songs_RDD_LP.union(similar_songs_RDD_LP)
-   // train_set.toDF().toDF().sort($"label".desc).show(500)
+
     val startTime =  new DateTime()
     println("Start: Training LogisticRegressionWithLBFGS with ", train_set.count(), " songs")
     val finalmodel = new LogisticRegressionWithLBFGS()
@@ -165,13 +178,14 @@ object RecoEngine {
     println("End: LogisticRegressionWithLBFGS Prediction")
     val endTime = new DateTime()
     val totalTime = new time.Interval(startTime,endTime)
-    println("Time to train:" , totalTime.toDuration.getStandardSeconds, "seconds")
+   // println("Time to train:" , totalTime.toDuration.getStandardSeconds, "seconds")
 
 
-    val startTime1 =  new DateTime()
-    val temp3 = df_new_attributes.select("track_id","danceability","energy", "tempo" ,"key","time_signature").limit(200)
+    System.gc()
 
-    println("Start: Prediction of",10000 ,"with LogisticRegressionWithLBFGS ")
+    val temp3 = df_new_attributes.select("track_id","danceability","energy", "tempo" ,"key","time_signature")
+
+    println("Start: Prediction with LogisticRegressionWithLBFGS ")
 
     val new_song_RDD:RDD[(String, Int, String)] =
       temp3.map(v =>
@@ -184,26 +198,17 @@ object RecoEngine {
             v(5).toString.toDouble)).toInt,"Hot"))
       else (v(0).toString, 0,"Hot"))
 
-    new_song_RDD.foreach(println)
     val endTime1 = new DateTime()
-    val totalTime1 = new time.Interval(startTime1,endTime1)
-    println("Time to test:" , totalTime1.toDuration.getStandardSeconds, "seconds")
+    //val totalTime1 = new time.Interval(startTime1,endTime1)
+    //println("Time to test:" , totalTime1.toDuration.getStandardSeconds, "seconds")
 
-    println("1")
-    val SimilarResultRDD2:RDD[(String, Int,String)] = user_SimilarResult.map(r=>(r(0).toString,math.round(r(1).toString.toDouble).toInt," "))
-    println("2")
-    val Top200TrackIdRDD = SimilarResultRDD2.union(new_song_RDD)
-    val Top200TrackIdDF = Top200TrackIdRDD.toDF("_1","_2","_3")
 
-    val Top200TrackId:RDD[(String,Int)] = Top200TrackIdDF.map(f=>(f(0).toString,f(1).toString.toInt))
-    println("4")
-    Top200TrackId.foreach(println)
-    val Top200TrackIdMap: Map[String,Int] =  Top200TrackId.collect().toMap
-    println("5")
+    println("Final reccomendations")
 
-    val final_songs = song.getDetails(sqlContext,Top200TrackIdMap.keysIterator)
-    println("6")
-    final_songs.join(Top200TrackIdDF,Top200TrackIdDF("_1")===final_songs("track_id") ).select("track_id","title","release","artist_name","duration","year","_2","_3").toDF("track_id","title","release","artist_name","duration","year","Confidence","Hot?").sort($"Confidence".desc).show(100)
+    val final3 =new_song_RDD.toDF("track_id", "confidence","HotorNot?")
+    val final4 = final3.unionAll(final2).unionAll(final1).toDF("track_id1", "confidence","HotorNot?").where("confidence > 2")
+
+    df_metadata.join(final4, final4("track_id1") === df_metadata("track_id") ).select("title", "artist_name", "release", "duration", "year", "confidence", "HotorNot?").sort($"confidence".desc).show(100)
 
     sc.stop()
     println("Spark Context stopped")

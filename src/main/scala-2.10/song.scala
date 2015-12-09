@@ -57,7 +57,18 @@ object song {
       }
     }
 
-    new ListMap() ++ map_sim_songs.toSeq.sortWith (_._2 > _._2)
+    var topuserscore = map_sim_songs.toSeq.sortWith (_._2 > _._2).head._2.toDouble
+    topuserscore = topuserscore/10.0
+
+    var map_sim_songs2 = Map[String, Int]()
+    for (song_tmp <- map_sim_songs) {
+
+     // println("total div"+ song_tmp._2 + math.round(song_tmp._2.toLong/topuserscore))
+
+      map_sim_songs2 += (song_tmp._1 -> math.round(song_tmp._2.toDouble/topuserscore).toInt)
+    }
+
+    new ListMap() ++ map_sim_songs2.toSeq.sortWith (_._2 > _._2).toSeq
   }
 
   def getDetails(sqlContext: SQLContext, track_id:String) :DataFrame=
