@@ -25,9 +25,12 @@ The architecture is as follows:
 http://imgur.com/a/0adNo
 
 Run the following two files:
+
 tagGenerator.scala
+
 RecoEngine.scala
 
 Team Members:
 Snehasis Ghosh
+
 Nikhil Raina
