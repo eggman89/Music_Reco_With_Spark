@@ -7,18 +7,20 @@ We use a hybrid of collabarative filtering, popularity based model and content b
 (RecoEngine.scala)
 
 
-2)Given a set of songs and it's attributes (i.e tempo, energy, dancablity, time signature and key ) , can we predict the tag for new songs(e.g. Classic Rock, Pop etc..)?
+2)Given a set of songs and it's attributes (i.e tempo, energy, dancablity, time signature,key and 12 timbre features(avg timbre and var timbre) ) , can we predict the tag for new songs(e.g. Pop_Rock, Electronica etc..)?
 (tagGenerator.scala)
 
-The dataset has beenn aquired from MillionSongDataset, LastFM and echonest APIs.
+Currently we are able to achieve an accuracy of 70%.
+
+The dataset has beenn acquired from MillionSongDataset, LastFM and echonest APIs.
 
 More details would be added soon.
 
-->Implemented hybrid of Collaborative filtering and Content-based recommendation using Mllib(logistic regression) .
-->Implemented automatic tag generation(using logistic regression, Random Forest, Naive Bayes and Decision tree) for new songs based on historical data 
+->Implemented hybrid of Collaborative filtering and Content-based recommendation using Mllib(logistic regression) for a detailed personalised reccomendation .
+->Implemented automatic tag generation(using logistic regression, Random Forest, Naive Bayes and Decision tree) for new songs based on it's attributes.
 ->Provides the prediction accuracy and time taken by all the four algorithms.
 
-The cleaned and parsed data can be downloaded from here:
+The cleaned and parsed data required for this project can be downloaded from here:
 https://drive.google.com/a/ncsu.edu/folderview?id=0B5_HzOkbztHuMkptSzJidzl1c1k&usp=sharing
 
 The architecture is as follows:
