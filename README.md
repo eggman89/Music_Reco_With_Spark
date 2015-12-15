@@ -1,6 +1,6 @@
 # Music Recommendation Using Spark(not updated anymore)
 
-Moved to https://github.com/eggman89/TagGenerationandMusicRecomendation
+#Moved to https://github.com/eggman89/TagGenerationAndMusicReco
 
 
 This project attempts to answer the following 2 questions :
