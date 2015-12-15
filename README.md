@@ -1,4 +1,7 @@
-# Music Recommendation Using Spark
+# Music Recommendation Using Spark(not updated anymore)
+
+Moved to https://github.com/eggman89/TagGenerationandMusicRecomendation
+
 
 This project attempts to answer the following 2 questions :
 
